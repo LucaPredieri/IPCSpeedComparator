@@ -87,7 +87,7 @@ int main(int argc, char *argv[])
 			sem_post(mutex);
 			sem_post(not_empty);
 		}
-		int fd_fifo = open("my_timeprod", O_WRONLY);
+		int fd_fifo = open("/tmp/my_time_p", O_WRONLY);
 		write(fd_fifo, &time, sizeof(double));
 		sleep(5);
 		// return 0;
@@ -115,7 +115,7 @@ int main(int argc, char *argv[])
 		}
 		clock_gettime(CLOCK_REALTIME, &finish);
 		time = 1000000000 * (finish.tv_sec) + (finish.tv_nsec);
-		int fd_fifo = open("my_timecons", O_WRONLY);
+		int fd_fifo = open("/tmp/my_time_c", O_WRONLY);
 		write(fd_fifo, &time, sizeof(double));
 		sleep(5);
 	}

@@ -9,10 +9,12 @@
 #include <string.h>
 #include <sys/wait.h>
 #include <time.h>
+
 // Function: CHECK(X)
 // This function writes on the shell whenever a sistem call returns any kind of error.
 // The function will print the name of the file and the line at which it found the error.
 // It will end the check exiting with code 1.
+
 #define CHECK(X) (                                             \
     {                                                          \
       int __val = (X);                                         \
@@ -215,7 +217,7 @@ int main(int argc, char *argv[])
       printf("\n%s-----------------------%s\n", bhmagenta, reset);
       printf("Sending data...\n"); fflush(stdout);
 
-      // Initialization of the array of data needed for using the execvp() function
+      // Initialization off the array of data needed for using the execvp() function
       // contained in the spawn() function.
 
       // char *arg_list_1[] = {"./s_prod", "5096", bufSize_s, (char *)NULL};
