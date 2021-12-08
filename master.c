@@ -32,6 +32,7 @@
 // Function: spawn(__,__)
 // This function forks the program and, on the child process, calls the function execvp()
 // with the parameters passed as arguments of spawn().
+
 int spawn(const char *program, char **arg_list)
 {
 
@@ -49,6 +50,9 @@ int spawn(const char *program, char **arg_list)
   }
 }
 
+// Function create_fifo(__,__)
+// This function crates a FIFO (named pipe) to pass informations between processes.
+
 void create_fifo(const char *name)
 {
   // automatically checks for errors.
@@ -63,6 +67,7 @@ void create_fifo(const char *name)
 }
 
 // Colors for konsole prints.
+
 const char *red = "\033[0;31m";
 const char *bhred = "\e[1;91m";
 const char *green = "\033[1;32m";
@@ -77,31 +82,46 @@ const char *bhcyan = "\e[1;96m";
 const char *bhwhite = "\e[1;97m";
 const char *reset = "\033[0m";
 
+// Main function, where all the actions take place.
+
 int main(int argc, char *argv[])
 {
+
   // Check for correct number of arguments.
+
   if (argc != 1)
   {
     fprintf(stderr, "usage:%s <filename>\n", argv[0]);
     exit(-1);
   }
-  //for everyone
+
+  // Declaring variables. 
+
   char bufSize_s[80];
   int mode[4] = {1, 2, 3, 4};
-
   int input_mode = 0;
   pid_t pid_consumer, pid_producer, pid_cb;
   double timeprod, timecons;
+  int bufSize = 1000;
+
+  // Creating fifos.
+
   create_fifo("my_timeprod");
   create_fifo("my_timecons");
-  int fd_fifoprod, fd_fifocons;
-  int bufSize;
 
-  //unnamed pipe
+  // Declaring file descriptors.
+
+  int fd_fifoprod, fd_fifocons;
+
+  // File descriptor unnamed pipe.
+
   int fd_up[2];
 
-  //named pipe
+  // Declaring name named pipe
+
   char *named_pipe = "/tmp/named_pipe";
+
+  // Printing PID of the master.
 
   printf("\nPID master [%d]\n", getpid());
   fflush(stdout);
@@ -109,7 +129,7 @@ int main(int argc, char *argv[])
   while (1)
   {
     printf("\n\n%sInsert buffer size [MB] smaller than 100MB or insert [0] to quit:%s \n", bhblue, reset);
-
+    /*
     do
     {
       scanf("%d", &bufSize);
@@ -126,8 +146,27 @@ int main(int argc, char *argv[])
         printf("%sWrong value! try again:%s\n", bhred, reset);
         fflush(stdout);
       }
-    } while (bufSize > 100 || bufSize < 0 || !bufSize);
+    } while (bufSize > 100 || bufSize < 0 || !bufSize); */
     
+    
+    while(bufSize > 100 || bufSize < 0 || !bufSize){
+      printf("sas");
+      scanf("%d", &bufSize);
+      if (bufSize == 0)
+      {
+        unlink("my_timeprod");
+        unlink("my_timecons");
+        printf("program stopped by the user\n");
+        fflush(stdout);
+        return 0;
+      }
+      if (bufSize > 100 || bufSize < 0 || !bufSize)
+      {
+        printf("%sWrong value! try again:%s\n", bhred, reset);
+        fflush(stdout);
+      }
+    }
+
     bufSize=bufSize*250000;
     
     sprintf(bufSize_s, "%d", bufSize);
