@@ -278,17 +278,19 @@ int main(int argc, char const *argv[]){
 				// UNNAMED PIPES MODE.
 
 				case 1:
-
+					
 					printf("\n%s [1]: Un-named pipes%s\n", bhyellow, reset);
     			printf("%s -----------------------%s\n", bhyellow, reset);
     			printf(" Sending data...\n"); fflush(stdout);
 
-    			// Declaring file descriptors.
-
     			char fd_1[80];
     			char fd_2[80];
 
-					CHECK(pipe(fd_up) == -1);
+
+					if (pipe(fd_up) == -1){
+						perror("Error creating unnamed fifo\n");
+						exit(1);
+					}
 
 					// Assigning the two variables for reading and writing 
 					// the unnamed pipe.
@@ -298,22 +300,15 @@ int main(int argc, char const *argv[]){
 
 					char *arg_list_up[] = {"./up", fd_1, fd_2, buffer_size_s, NULL};
 
-					// Spawning of the process.
+					// Spawning of the other processes.
 
 					pid_t pid_up = spawn("./up", arg_list_up);
 
-					// Calling replace() function to change the array.
-
 					replace(modes_array,1);
-
-					// Stopping the cycle.
 
 					cycle = false;
 
 					printf("PID UP [%d]\n", pid_up); fflush(stdout);
-
-					// Turning input_mode to 5 in order to get inside the while()
-					// loop to ask the input_mode again.
 
 					input_mode = 5;
 
@@ -332,25 +327,17 @@ int main(int argc, char const *argv[]){
 					create_fifo(named_pipe);
 
 					// Creating argument list.
-
 					char *arg_list_np[] = {"./np", named_pipe, buffer_size_s, NULL};
 
-					// Spawning of the process.
+					// Spawning of the other processes.
 
 					pid_t pid_np = spawn("./np", arg_list_np);
 
-					// Calling replace() function to change the array.
-
 					replace(modes_array,2);
-
-					// Stopping the cycle.
 
 					cycle = false;
 
 					printf("PID Named Pipe [%d]\n", pid_np); fflush(stdout);
-
-					// Turning input_mode to 5 in order to get inside the while()
-					// loop to ask the input_mode again.
 
 					input_mode = 5;
 
@@ -369,22 +356,15 @@ int main(int argc, char const *argv[]){
 
 					char *arg_list_socket[] = {"./socket", "5096", "127.0.0.1", buffer_size_s, (char *)NULL};
 
-					// Spawning the process.
+					// Spawning processes.
 
 					pid_t pid_socket = spawn("./socket", arg_list_socket);
 
-					// Calling replace() function to change the array.
-
 					replace(modes_array,3);
-
-					// Stopping the cycle.
 
 					cycle = false;
 
 	  			printf("PID socket [%d]\n", pid_socket); fflush(stdout);
-
-	  			// Turning input_mode to 5 in order to get inside the while()
-					// loop to ask the input_mode again.
 
 	  			input_mode = 5;
 
@@ -394,52 +374,32 @@ int main(int argc, char const *argv[]){
 
 				case 4:
 
-					// Asking the user how big he wants the circular buffer memory.
-
 					printf("\n How big should the circular-buffer memory be [KB]? (0.1-10): \n");
-
 					do{
-
 						scanf("%d", &circular_buffer_size);
-
 						if (circular_buffer_size <= 0 || circular_buffer_size > 10){
 							printf("%s Wrong mem! try again:%s\n", bhred, reset);
 							fflush(stdout);
 						}
-
-	    		} while (circular_buffer_size <= 0 || circular_buffer_size > 10);
+	    				} while (circular_buffer_size <= 0 || circular_buffer_size > 10);
 	    
-	    		// 
-
-					circular_buffer_size = circular_buffer_size*250;
+	    
+					circular_buffer_size=circular_buffer_size*250;
 
 					sprintf(circular_buffer_size_s, "%d", circular_buffer_size);
 
 					printf("\n%s [4]: Shared memory with circular buffer:%s\n", bhcyan, reset);
 					printf("\n%s -----------------------%s\n", bhcyan, reset);
-					printf(" Sending data...\n"); fflush(stdout);
-
-					// Initialization of the array of data needed for using the execvp() function
-					// contained in the spawn() function.
-
+					printf(" Sending data...\n");
+					fflush(stdout);
 					char *arg_list_1[] = {"./cb", buffer_size_s, circular_buffer_size_s, (char *)NULL};
-
-					// Spawning the process.
-
 					pid_cb = spawn("./cb", arg_list_1);
 
-					// Calling replace() function to change the array.
-
 					replace(modes_array,4);
-
-					// Stopping the cycle.
 
 					cycle = false;
 
 					printf(" PID Circular-buffer [%d]\n", pid_cb); fflush(stdout);
-
-					// Turning input_mode to 5 in order to get inside the while()
-					// loop to ask the input_mode again.
 
 					input_mode = 5;
 
@@ -447,14 +407,12 @@ int main(int argc, char const *argv[]){
 					
 		}
 		
-		// Opening FIFOs to read time from the processes.
 
 		CHECK(fd_producer = open("/tmp/my_time_p", O_RDONLY));
-		CHECK(fd_consumer = open("/tmp/my_time_c", O_RDONLY));
-		sleep(1);
-		
-		// Waiting and getting the status of the closing process.
+			CHECK(fd_consumer = open("/tmp/my_time_c", O_RDONLY));
 
+		sleep(1);
+	
 		int status;
 		CHECK(wait(&status));
 
@@ -463,54 +421,48 @@ int main(int argc, char const *argv[]){
 		  CHECK(WEXITSTATUS(status));
 		}
 
-		// Reading both times of producer and consumer.
-
 		read(fd_producer, &time_p, sizeof(double));
 		read(fd_consumer, &time_c, sizeof(double));
 
-		// Calculating the time difference.
-
 		double timediff = time_c - time_p;
 
-		// Printing times and time diff.
+		time_p = time_p / 1000000000;
+		time_c = time_c / 1000000000;
+		printf("TIME 1 IS: %lf\n", time_p); fflush(stdout);
+		printf("TIME 2 IS: %lf\n", time_c); fflush(stdout);
 
-		printf("TIME 1 IS: %lf\n", time_p/1000000000); fflush(stdout);
-		printf("TIME 2 IS: %lf\n", time_c/1000000000); fflush(stdout);
-		printf("TIME DIFFERENCE IS: %lf\n", timediff/1000000000); fflush(stdout);
+		timediff = timediff / 1000000000;
+		printf("TIME DIFFERENCE IS: %lf\n", timediff); fflush(stdout);
 
-		// Really important switch, this switch case permits to close file
-		// descriptors or unlinking pipes, in order to have a cleaner wor-
-		// kspace.
-
-		switch (input_mode){
-
+		switch (input_mode)
+	    {
 	    case 1:
 	      close(fd_up[0]);
 	      close(fd_up[1]);
-	      printf("%s -----------------------%s\n", bhyellow, reset); fflush(stdout);
-	    break;
-
+	      printf("%s -----------------------%s\n", bhyellow, reset);
+	      fflush(stdout);
+	      break;
 	    case 2:
 	      unlink(named_pipe);
-	      printf("%s -----------------------%s\n", bhgreen, reset); fflush(stdout);
-	    break;
+	      printf("%s -----------------------%s\n", bhgreen, reset);
+	      fflush(stdout);
+	      break;
 
 	    case 3:
-	      printf("%s -----------------------%s\n", bhmagenta, reset); fflush(stdout);
-	    break;
+	      printf("%s -----------------------%s\n", bhmagenta, reset);
+	      fflush(stdout);
+	      break;
 
 	    case 4:
-	      printf("%s -----------------------%s\n", bhcyan, reset); fflush(stdout);
-	    break;
+	      printf("%s -----------------------%s\n", bhcyan, reset);
+	      fflush(stdout);
+	      break;
 	    }
 		}
 	}
 
-	// Anyway, we want to unlink the FIFOs for time producer and consumer.
-
 	unlink("/tmp/my_time_p");
 	unlink("/tmp/my_time_c");
-
 	return 0;
 }
 
